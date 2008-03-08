@@ -15,8 +15,8 @@
 
 
 volcano <-
-  function(matestobj, threshold=c(0.001,0.05,0.05),
-           method=c("unadj","unadj", "unadj"), title="Volcano Plot",
+  function(matestobj, threshold=c(0.001,0.05),
+           method=c("unadj","unadj"), title="Volcano Plot",
            highlight.flag=TRUE, onScreen=TRUE)
 {
   if(class(matestobj)[1] != "matest")
@@ -42,28 +42,27 @@ volcano <-
 ######################################################################
 volcano.ftest <- function(matestobj, threshold, method, title,
                           highlight.flag){
-  subCol <- matestobj$obsAnova$anova$subCol
-  if(subCol) anovaobj = matestobj$obsAnova$anova.subcol
-  else anovaobj = matestobj$obsAnova$anova
+  anovaobj = matestobj$obsAnova
+  probeid = matestobj$probeid
 
-  if(length(method) == 1) method <- rep(method, 3)
+  if(length(method) == 1) method <- rep(method, 2)
   
   # local variables
   th.f1 <- threshold[1]
   th.fs <- threshold[2]
-  th.fss <- threshold[3]
+  #th.fss <- threshold[3]
   ngenes <- length(anovaobj$G)
 
   # get P values for all F tests according to method
   # for F1
   p1 <- getPval.volcano(matestobj, method, 1)
-  idx1 <- p1 < th.f1
+  idx1 <- p1 < th.f1 ; 
   # for Fs
   ps <- getPval.volcano(matestobj, method, 2)
-  idxs <- ps < th.fs
+  idxs <- ps < th.fs ; 
   # for Fss
-  pss <- getPval.volcano(matestobj, method, 3)
-  idxss <- pss < th.fss
+  #pss <- getPval.volcano(matestobj, method, 3)
+  #idxss <- pss < th.fss; ; 
   
   # calculate the x axis value
   # the x-axis value should be the numerator of the test, e.g.
@@ -85,8 +84,8 @@ volcano.ftest <- function(matestobj, threshold, method, title,
     points(xvalue[idxs], yvalue[idxs], col="red", pch=4, cex=0.5)
  
   # plot the significant genes from Fss (if there) in orange
-  if("Fss" %in% names(matestobj))
-    points(xvalue[idxss], yvalue[idxss], col="orange", pch=4, cex=0.5)
+  #if("Fss" %in% names(matestobj))
+  #  points(xvalue[idxss], yvalue[idxss], col="orange", pch=4, cex=0.5)
 
   # circle the flaged genes (if any)
   if(highlight.flag) {
@@ -98,17 +97,21 @@ volcano.ftest <- function(matestobj, threshold, method, title,
 
   # find the significant genes from all three F tests
   result <- NULL
-  result$idx.F1 <- which(idx1)
-  idx <- result$idx.F1
+  idx.F1 <- which(idx1); idx <- idx.F1
+  names(idx.F1) = probeid[idx.F1]
+  result$idx.F1 =idx.F1
+
   if("Fs" %in% names(matestobj)) {
-    result$idx.Fs <- which(idxs)
-    idx <- intersect(idx, result$idx.Fs)
+    idx.Fs <- which(idxs); idx <- intersect(idx, idx.Fs)
+    names(idx.Fs) = probeid[idx.Fs]
+    result$idx.Fs <- idx.Fs 
   }
-  if("Fss" %in% names(matestobj)) {
-    result$idx.Fss <- which(idxss)
-    idx <- intersect(idx, result$idx.Fss)
-  }
-  result$idx.all <- idx
+  #if("Fss" %in% names(matestobj)) {
+  #  idx.Fss <- which(idxss); idx <- intersect(idx, idx.Fss)
+  #  names(idx.Fss) = probeid[idx.Fss]
+  #  result$idx.Fss <- idx.Fss 
+  #}
+  idx.all = idx; names(idx.all) = probeid[idx.all]; result$idx.all <- idx.all
   result
 }
 
@@ -121,17 +124,16 @@ volcano.ftest <- function(matestobj, threshold, method, title,
 volcano.ttest <- function(matestobj, threshold, method, title,
                           highlight.flag, onScreen)
 {
-  subCol <- matestobj$obsAnova$anova$subCol
-  if(subCol) anovaobj = matestobj$obsAnova$anova.subcol
-  else anovaobj = matestobj$obsAnova$anova
+  anovaobj = matestobj$obsAnova
+  probeid = matestobj$probeid
   
   if(length(method) == 1)
-    method <- rep(method, 3)
+    method <- rep(method, 2)
   
   # local variables
   th.f1 <- threshold[1]
   th.fs <- threshold[2]
-  th.fss <- threshold[3]
+  #th.fss <- threshold[3]
   ngenes <- length(anovaobj$G)
   
   # get P values for all F tests according to method
@@ -142,8 +144,8 @@ volcano.ttest <- function(matestobj, threshold, method, title,
   ps <- getPval.volcano(matestobj, method, 2)
   idxs <- ps < th.fs
   # for Fss
-  pss <- getPval.volcano(matestobj, method, 3)
-  idxss <- pss < th.fss
+  #pss <- getPval.volcano(matestobj, method, 3)
+  #idxss <- pss < th.fss
  
   #############################
   # calculate the x axis value
@@ -199,10 +201,10 @@ volcano.ttest <- function(matestobj, threshold, method, title,
       points(xvalue[idxs], yvalue[idxs], col="red", pch=4, cex=0.5)
     }
     # plot the significant genes from Fss (if there) in orange
-    if("Fss" %in% names(matestobj)) {
-      idxss <- pss[,icon] < th.fss
-      points(xvalue[idxss], yvalue[idxss], col="orange", pch=4, cex=0.5)
-    }
+    #if("Fss" %in% names(matestobj)) {
+    #  idxss <- pss[,icon] < th.fss
+    #  points(xvalue[idxss], yvalue[idxss], col="orange", pch=4, cex=0.5)
+    #}
 
     # draw the reference line based on F3 test (if there)
     # note that this is alway vshape
@@ -233,23 +235,27 @@ volcano.ttest <- function(matestobj, threshold, method, title,
     }
   
     # find the significant genes from all three F tests
+
     result.tmp <- NULL
-    result.tmp$idx.F1 <- which(idx1)
-    idx <- result.tmp$idx.F1
-    if("Fss" %in% names(matestobj)) {
-      result.tmp$idx.Fss <- which(idxss)
-      idx <- intersect(idx, result.tmp$idx.Fss)
-    }
+    idx.F1 <- which(idx1); idx <- idx.F1
+    names(idx.F1) = probeid[idx.F1]
+    result.tmp$idx.F1 <- idx.F1
+
+    #if("Fss" %in% names(matestobj)) {
+    #  idx.Fss <- which(idxss); idx <- intersect(idx, idx.Fss)
+    # names(idx.Fss) = probeid[idx.Fss]
+    # result.tmp$idx.Fss <- idx.Fss 
+    #}
     if("Fs" %in% names(matestobj)) {
-      result.tmp$idx.Fs <- which(idxs)
-      idx <- intersect(idx, result.tmp$idx.Fs)
+      idx.Fs <- which(idxs); idx <- intersect(idx, idx.Fs)
+      names(idx.Fs) = probeid[idx.Fs]
+      result.tmp$idx.Fs <- idx.Fs 
     }
-    
-    result.tmp$idx.all <- idx
+    idx.all <- idx
+    names(idx.all) = probeid[idx.all]; result.tmp$idx.all <- idx.all
     result.name <- paste("comparison", icon, sep="")
     result[[result.name]] <- result.tmp
   }
-  
   result
 }
 
@@ -265,8 +271,8 @@ getPval.volcano <- function(matestobj, method, idx)
     whichF <- "Fs"
   if(idx == 1)
     whichF <- "F1"
-  if(idx == 3)
-    whichF <- "Fss"
+  #if(idx == 3)
+  #  whichF <- "Fss"
 
   if( !(whichF %in% names(matestobj)) )
     return(NULL)
@@ -308,9 +314,7 @@ getPval.volcano <- function(matestobj, method, idx)
 calVolcanoXval <- function(matestobj)
 {
   model <- matestobj$model
-  subCol <- matestobj$obsAnova$anova$subCol
-  if(subCol) anovaobj = matestobj$obsAnova$anova.subcol
-  else anovaobj = matestobj$obsAnova$anova
+  anovaobj = matestobj$obsAnova
 
   # get the estimates from ANOVA object on observed data
   term <- matestobj$term
