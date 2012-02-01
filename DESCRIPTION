@@ -1,5 +1,5 @@
 Package: maanova
-Version: 1.25.0
+Version: 1.25.1
 Title: Tools for analyzing Micro Array experiments
 Author: Hao Wu, modified by Hyuna Yang and Keith Sheppard with ideas from Gary
         Churchill, Katie Kerr and Xiangqin Cui.
@@ -9,7 +9,7 @@ Description: Analysis of N-dye Micro Array experiment using mixed model
 	     bootstrap, cluster and consensus tree. 
 License: GPL (>= 2)
 URL: http://research.jax.org/faculty/churchill
-Depends: R (>= 2.7.0)
+Depends: R (>= 2.10)
 Imports: Biobase, graphics, grDevices, methods, stats, utils
 Suggests: qvalue, snow
 Enhances: Rmpi
