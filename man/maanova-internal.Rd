@@ -67,7 +67,6 @@
 \alias{ones}
 \alias{parseformula}
 \alias{pinv}
-\alias{ma.svd}
 \alias{repmat}
 \alias{rowmax}
 \alias{rowmin}
@@ -143,7 +142,6 @@ mixed(y, X, Z, XX, XZ, ZZ, Zi, ZiZi, dimZ, s20, method =
 parseformula(formula, random, covariate)
 makeContrast(model, term)
 pinv(X, tol)
-ma.svd(x, nu=min(n,p), nv=min(n,p), method=c("dgesvd","dgesdd"))
 fdr(p, method = c("stepup", "adaptive", "stepdown", 'jsFDR'))
 }
 
@@ -187,8 +185,6 @@ fdr(p, method = c("stepup", "adaptive", "stepdown", 'jsFDR'))
     I use La.svd instead of svd in my function.
     I don't want to spend time on it so it doesn't support complex
     number
-    \item ma.svd: function to compute the sigular-value decomposition 
-    of a rectangular matrix by using LAPACK routines DEGSVD AND ZGESVD.
     \item fdr: function to calculate the adjusted P values for FDR control.
   }
 

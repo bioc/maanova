@@ -195,7 +195,7 @@ matrank <- function(X)
     # rank is 1 for vectors
     return(1)
   else if(is.matrix(X)) {
-    s <- ma.svd(X,0,0)
+    s <- La.svd(X,0,0)
     tol <- max(dim(X)) * s$d[1] * .Machine$double.eps
     r <- sum(s$d>tol)
     return(r)
@@ -401,7 +401,10 @@ findgroup <- function(varid, ndye)
 # it to "dgesdd". Hopefully it will not have problem like before.
 #
 # From R-2.4.0 La.svd(X, method="dgesdd" or "dgesvd") is deprecated, so change
-# it to La.svd(X). method="dgesdd" is the default.
+# it to La.svd(X). method="dgesdd" is the default.#
+#
+# Because bioconductor does not allow warning messages and the .Call(...) code
+# in ma.svd was giving warnings I had to go back to using the La.svd function
 #
 ###############################################################
   
@@ -411,8 +414,7 @@ pinv <- function(X, tol)
     stop("X must be a numeric matrix")
   if (!is.matrix(X)) 
     X <- as.matrix(X)
-#  Xsvd <- La.svd(X)
-  Xsvd <- ma.svd(X,method="dgesvd")
+  Xsvd <- La.svd(X)
   
   # find the tolerance
   if(missing(tol))
@@ -427,96 +429,6 @@ pinv <- function(X, tol)
                             t(Xsvd$u[, Positive, drop = FALSE]))
 }
 
-###############################################################
-#
-# function to compute the singular-value decomposition of a rectangular 
-# matrix by using LAPACK routines DGESVD and ZGESVD.
-#
-###############################################################
-ma.svd <- function (x, nu = min(n, p), nv = min(n, p), method = c("dgesvd", 
-    "dgesdd")) 
-{
-    if (!is.numeric(x) && !is.complex(x)) 
-        stop("argument to 'ma.svd' must be numeric or complex")
-    if (any(!is.finite(x))) 
-        stop("infinite or missing values in 'x'")
-    method <- match.arg(method)
-    x <- as.matrix(x)
-    if (is.numeric(x)) 
-        storage.mode(x) <- "double"
-    n <- nrow(x)
-    p <- ncol(x)
-    if (!n || !p) 
-        stop("0 extent dimensions")
-    if (is.complex(x) || method == "dgesvd") {
-        if (nu == 0) {
-            jobu <- "N"
-            u <- matrix(0, 1, 1)
-        }
-        else if (nu == n) {
-            jobu <- ifelse(n > p, "A", "S")
-            u <- matrix(0, n, n)
-        }
-        else if (nu == p) {
-            jobu <- ifelse(n > p, "S", "A")
-            u <- matrix(0, n, p)
-        }
-        else stop("'nu' must be 0, nrow(x) or ncol(x)")
-        if (nv == 0) {
-            jobv <- "N"
-            v <- matrix(0, 1, 1)
-        }
-        else if (nv == n) {
-            jobv <- ifelse(n > p, "A", "S")
-            v <- matrix(0, min(n, p), p)
-        }
-        else if (nv == p) {
-            jobv <- ifelse(n > p, "S", "A")
-            v <- matrix(0, p, p)
-        }
-        else stop("'nv' must be 0, nrow(x) or ncol(x)")
-        if (is.complex(x)) {
-            u[] <- as.complex(u)
-            v[] <- as.complex(v)
-            res <- .Call("La_svd_cmplx", jobu, jobv, x, double(min(n, 
-                p)), u, v, PACKAGE = "base")
-        }
-        else {
-            res <- .Call("masvd", jobu, jobv, x, double(min(n, 
-                p)), u, v, method, PACKAGE = "maanova")
-        }
-        return(res[c("d", if (nu) "u", if (nv) "vt")])
-    }
-    else {
-        if (nu > 0 || nv > 0) {
-            np <- min(n, p)
-            if (nu <= np && nv <= np) {
-                jobu <- "S"
-                u <- matrix(0, n, np)
-                v <- matrix(0, np, p)
-            }
-            else {
-                jobu <- "A"
-                u <- matrix(0, n, n)
-                v <- matrix(0, p, p)
-            }
-        }
-        else {
-            jobu <- "N"
-            u <- matrix(0, 1, 1)
-            v <- matrix(0, 1, 1)
-        }
-        jobv <- ""
-        res <- .Call("La_svd", jobu, jobv, x, double(min(n, p)), 
-            u, v, method, PACKAGE = "base")
-        res <- res[c("d", if (nu) "u", if (nv) "vt")]
-        if (nu) 
-            res$u <- res$u[, 1:min(n, nu), drop = FALSE]
-        if (nv) 
-            res$vt <- res$vt[1:min(p, nv), , drop = FALSE]
-        return(res)
-    }
-}
 
 
 ###############################################################
