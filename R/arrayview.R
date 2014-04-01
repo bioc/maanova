@@ -80,7 +80,7 @@ arrayview <-
     b <- rep(0,64)
     colormap <- NULL
     for(i in 1:64)
-      colormap[i] <- rgb(r=r[i],g=g[i],b=b[i])
+      colormap[i] <- rgb(r[i], g[i], b[i])
   }
 
   for(i in array) { # loop for all arrays
